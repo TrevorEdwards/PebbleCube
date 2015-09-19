@@ -30,6 +30,11 @@
                 "type": "font"
             },
             {
+                "file": "images/end.png",
+                "name": "IMAGES_END_PNG",
+                "type": "png"
+            },
+            {
                 "file": "images/floor.png",
                 "name": "IMAGES_FLOOR_PNG",
                 "type": "png"

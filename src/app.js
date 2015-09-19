@@ -181,7 +181,12 @@ var files = [new UI.Image({
     position: new Vector2(0, 0),
     size: new Vector2(144, 168),
     image: 'images/ceiling.png'
-  })];
+  }),   
+    new UI.Image({
+    position: new Vector2(0,0),
+      size: new Vector2(144, 168),
+      image: 'images/end.png'
+    })];
 
 /**
 * Returns a Window with the desired view rendered (0 = wall, 1 = floor, 2 = ceiling)
@@ -332,6 +337,9 @@ Game.prototype.attemptMove = function() {
         else if(this.currentX === this.endX && this.currentY === this.endY && this.currentZ === this.endZ && this.myPerson.NSEWDirection === this.endDir  && this.myPerson.UDDirection == "STRAIGHT") {
               victoryEnd();
               this.ended = true;
+              var mypic = this.files[3];
+               this.wind.add(mypic);
+            this.wind.show(mypic);
               return false;
         }
         else if(this.currentX === 0 && this.myPerson.NSEWDirection == "W") {
@@ -431,6 +439,7 @@ function victoryEnd(){
           card.body('You escaped the cube of Kanye');
           //game.hide();
         card.show();
+  
   
 }
             
