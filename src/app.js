@@ -167,6 +167,22 @@ titleMenu.on('click', 'down', titleToGame );
 titleMenu.on('click', 'select', titleToGame );
 titleMenu.on('click', 'back', titleToGame );
 
+var files = [new UI.Image({
+    position: new Vector2(0, 0),
+    size: new Vector2(144, 168),
+    image: 'images/wall1.png'
+  }),
+               new UI.Image({
+    position: new Vector2(0, 0),
+    size: new Vector2(144, 168),
+    image: 'images/floor.png'
+  }),
+               new UI.Image({
+    position: new Vector2(0, 0),
+    size: new Vector2(144, 168),
+    image: 'images/ceiling.png'
+  })];
+
 /**
 * Returns a Window with the desired view rendered (0 = wall, 1 = floor, 2 = ceiling)
 */
@@ -176,14 +192,7 @@ function roomRender(view, hasDoor, direction){
     fullscreen: true
   });
   
-  var files = ['images/wall1.png','images/floor.png','images/ceiling.png'];
-  
-  var mypic = new UI.Image({
-    position: new Vector2(0, 0),
-    size: new Vector2(144, 168),
-    image: files[view]
-  });
-  
+  var mypic = files[view];
   wind.add(mypic);
   
   var directionText = new UI.Text({
