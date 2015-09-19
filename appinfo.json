@@ -1,0 +1,58 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "treebark12002@gmail.com",
+    "longName": "PebbleCube",
+    "projectType": "pebblejs",
+    "resources": {
+        "media": [
+            {
+                "file": "images/menu_icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/logo_splash.png",
+                "name": "IMAGE_LOGO_SPLASH",
+                "type": "png"
+            },
+            {
+                "file": "images/tile_splash.png",
+                "name": "IMAGE_TILE_SPLASH",
+                "type": "png"
+            },
+            {
+                "file": "fonts/UbuntuMono-Regular.ttf",
+                "name": "MONO_FONT_14",
+                "type": "font"
+            },
+            {
+                "file": "images/wall1.png",
+                "name": "IMAGES_WALL1_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/ceiling.png",
+                "name": "IMAGES_CEILING_PNG",
+                "type": "png"
+            },
+            {
+                "file": "images/floor.png",
+                "name": "IMAGES_FLOOR_PNG",
+                "type": "png"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "PebbleCube",
+    "uuid": "120c23d7-85f9-4177-a5ab-bdaf57f6974e",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "hiddenApp": false,
+        "watchface": false
+    }
+}
