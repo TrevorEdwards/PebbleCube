@@ -321,12 +321,17 @@ function Game(name, room, size, startx, starty, startz, endx,endy,endz,enddir) {
         this.endY = endy;
         this.endZ = endz;
         this.endDir = enddir;
+        this.ended = false;
 }
 
 
 Game.prototype.attemptMove = function() {
-        if(this.currentX === this.endX && this.currentY === this.endY && this.currentZ === this.endZ && this.myPerson.NSEWDirection === this.endDir  && this.myPerson.UDDirection == "STRAIGHT") {
+        if(this.ended) {
+          return false;
+        }
+        else if(this.currentX === this.endX && this.currentY === this.endY && this.currentZ === this.endZ && this.myPerson.NSEWDirection === this.endDir  && this.myPerson.UDDirection == "STRAIGHT") {
               victoryEnd();
+              this.ended = true;
               return false;
         }
         else if(this.currentX === 0 && this.myPerson.NSEWDirection == "W") {

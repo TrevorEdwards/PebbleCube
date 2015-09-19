@@ -30,13 +30,13 @@
                 "type": "font"
             },
             {
-                "file": "images/wall1.png",
-                "name": "IMAGES_WALL1_PNG",
+                "file": "images/floor.png",
+                "name": "IMAGES_FLOOR_PNG",
                 "type": "png"
             },
             {
-                "file": "images/floor.png",
-                "name": "IMAGES_FLOOR_PNG",
+                "file": "images/wall1.png",
+                "name": "IMAGES_WALL1_PNG",
                 "type": "png"
             },
             {
