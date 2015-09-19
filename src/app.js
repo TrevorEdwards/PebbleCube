@@ -5,8 +5,35 @@
 
 var UI = require('ui');
 var Vector2 = require('vector2');
+var ajax = require('ajax');
+var Light = require('ui/light');
+var Vibe = require('ui/vibe');
 
 var titleMenu = new UI.Window();
+
+Light.on();
+
+var placeData;
+  ajax(
+  {
+    url:'http://cornelldata.org/api/v0/map-data/buildings',
+    // url:'http://api.openweathermap.org/data/2.5/forecast?q=London',
+    type:'json'
+  },
+  function(data) {
+  //  console.log(data);
+  //  console.log(JSON.stringify(data, null, 2));
+    placeData = [];
+    for(var i = 0; i < data.length; i++){
+    //  console.log(data[i]);
+      placeData.push(data[i].Name);
+    }
+  },
+  function(error) {
+    console.log('Download failed: ' + error);
+  }
+);
+  
 
 // Create a background Rect
 var bgRect = new UI.Rect({
@@ -58,32 +85,79 @@ titleMenu.show();
 //BEGINNING OF NEW STUFF
 
 var titleToGame = function(e){
-  var G = new Game("lolname", null, 5, 3,3,3);
-  var game = roomRender(0,true);
+  var G = new Game("lolname", null, 5, 2,2,2,2,4,3,"N");
+  var game = roomRender(0,true,"N");
   game.show();
   titleMenu.hide();
   
   var doorClosed = true;
   
+  function gameTransition(type){
+    if(type === 1){
+      G.myPerson.turnRight();
+    }
+    else if(type === 2){
+      G.myPerson.turnLeft();
+    }
+    else if(type === 3){
+      G.myPerson.lookUP();
+    }
+    else if(type === 4){
+      G.myPerson.lookDOWN();
+    }
+    var hasDoor = G.shouldHaveDoor();
+        var roomType;
+        if( G.myPerson.UDDirection == "U"){
+          roomType = 2;
+        } else if ( G.myPerson.UDDirection == "D"){
+          roomType = 1;
+        } 
+    else{
+          roomType = 0;
+        }
+    var direction;
+        if (G.myPerson.UDDirection != "STRAIGHT"){
+          direction = "";
+        } else{
+          direction = G.myPerson.NSEWDirection;
+        }
+        doorClosed = true;
+       var descrip = G.rooms[G.currentX][G.currentY][G.currentZ].displayText;
+        var temp = roomRender(roomType,hasDoor, direction, descrip);
+        if(type === 0){
+          var card = new UI.Card({
+          title: ''
+          });
+          card.body(descrip);
+          game.transition(temp,card);
+        }else{
+          temp.show();
+          game.hide();
+        }
+        game = temp;
+        game.on('click','select', function(){gameLoop();});
+        game.on('click','up', function(){gameTransition(1);});
+        game.on('click','down', function(){gameTransition(2);});
+        game.on('longClick','up', function(){gameTransition(3);});
+        game.on('longClick','down', function(){gameTransition(4);});
+  }
+  
   function gameLoop(){
   if( doorClosed ){
       game.openAnimate( );
       doorClosed = false;
+      Vibe.vibrate('short');
     } else {
       if( G.attemptMove() ){
-        var hasDoor = true;
-        var roomType = 0;
-        var direction = "N";
-        doorClosed = true;
-        var temp = roomRender(roomType,hasDoor);
-        game.transition( temp );
-        game = temp;
-        game.on('click','up', gameLoop);
+        gameTransition(0);
+        Vibe.vibrate('long');
       }
     }
   }
   
-  game.on('click','up', gameLoop);
+  game.on('click','select', gameLoop);
+  game.on('click','up', function(){gameTransition(1);});
+  game.on('click','down', function(){gameTransition(2);});
   
 };
 
@@ -102,12 +176,6 @@ function roomRender(view, hasDoor, direction){
     fullscreen: true
   });
   
-  //try to get rid of stupid animations, api doesnt support this well
- // wind.on('show', function() {
-   // return false;
-//  });
-  
-  
   var files = ['images/wall1.png','images/floor.png','images/ceiling.png'];
   
   var mypic = new UI.Image({
@@ -119,10 +187,10 @@ function roomRender(view, hasDoor, direction){
   wind.add(mypic);
   
   var directionText = new UI.Text({
-  position: new Vector2(61,52),
+  position: new Vector2(61,25),
   size: new Vector2(30,30),
   text: direction,
-  font: 'gothic-10',
+  font: 'gothic-14',
   color: 'white',
   textAlign: 'center'
   });
@@ -155,17 +223,17 @@ function roomRender(view, hasDoor, direction){
      .animate('position',  new Vector2(72, 76), 500);
      
      setTimeout(function() {
-       knob.animate('position',  new Vector2(81, 76), 1000);
+       knob.animate('position',  new Vector2(81, 76), 1600);
       }, 600);
      
      setTimeout(function() {
         knob.remove();
-      }, 1700);
+      }, 2300);
 
     
  };
     
-    wind.transition = function(nextRoom){
+    wind.transition = function(nextRoom, card){
       
         knob.remove();
         mypic.remove();
@@ -175,7 +243,8 @@ function roomRender(view, hasDoor, direction){
       setTimeout(function() {
         nextRoom.show();
              wind.hide();
-      }, 1050);
+         card.show();
+      }, 1600);
       
     };
   }
@@ -201,9 +270,15 @@ function room(trap, displayText, xCoordinate, yCoordinate, zCoordinate) {
 
 function Person (name) {
         this.name = name;
-        this.NSEWDirection = "NORTH";
+        this.NSEWDirection = "N";
         this.UDDirection = "STRAIGHT";
-        this.Items = [];
+}
+  
+
+function getDescriptionString(){
+  var length = placeData.length;
+  var rand = Math.floor(Math.random() * length );
+  return "This place reminds you of " + placeData[rand];
 }
 
 var generateRooms = function(size) {
@@ -215,11 +290,10 @@ var generateRooms = function(size) {
                     rooms[i][j] = [];
                 }
         }
-         var possibleNames = getDisplaynames();
         for(var x = 0; x < size; x++){
           for(var y = 0; y < size; y++){
             for(var z = 0; z < size; z++){
-                rooms[x][y][z] = new room("dank", possibleNames[x*y*z % possibleNames.length], x, y, z);
+                rooms[x][y][z] = new room("dank", getDescriptionString(), x, y, z);
             }
           }
         }
@@ -227,50 +301,41 @@ var generateRooms = function(size) {
 };
 
 
-function Game(name, room, size, startx, starty, startz) {
+function Game(name, room, size, startx, starty, startz, endx,endy,endz,enddir) {
         this.myPerson = new Person(name);
         this.mySize = size;
         this.rooms = generateRooms(size);
         this.currentX = startx;
         this.currentY = starty;
         this.currentZ = startz;
+        this.endX = endx;
+        this.endY = endy;
+        this.endZ = endz;
+        this.endDir = enddir;
 }
-
-function getDisplaynames() {
-    var possibleNames = [];
-        possibleNames.push("This is the dankest meme Room");
-        possibleNames.push("Congratulations, you win the room!");
-        possibleNames.push("Wow, this room has the rarest pepe room");
-        possibleNames.push("Trevor Edwards");
-        possibleNames.push("Darude Sandstorm");
-        possibleNames.push("duududududu");
-  return possibleNames;
-}
-
-//Used when you have an invalid funciton and you need to prompt a message to the player that 
-//are doing some screwed up shit
-var  displayInvalid = function() {
-        //do some shit
-};
 
 
 Game.prototype.attemptMove = function() {
-        if(this.currentX === 0 && this.myPerson.NSEWDirection == "WEST") {
-                displayInvalid();
+        if(this.currentX === this.endX && this.currentY === this.endY && this.currentZ === this.endZ && this.myPerson.NSEWDirection === this.endDir  && this.myPerson.UDDirection == "STRAIGHT") {
+              victoryEnd();
+              return false;
+        }
+        else if(this.currentX === 0 && this.myPerson.NSEWDirection == "W") {
+               // displayInvalid();
                 return false;
-        } else if(this.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "EAST") {
-                displayInvalid();
+        } else if(this.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "E") {
+               // displayInvalid();
                 return false;
-        } else if(this.currentY === 0 &&this.myPersonNSEWDirection == "SOUTH"){
-                displayInvalid();
+        } else if(this.currentY === 0 &&this.myPersonNSEWDirection == "S"){
+               // displayInvalid();
                 return false;
-        } else if(this.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "NORTH") {
-                displayInvalid();
+        } else if(this.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "N") {
+              //  displayInvalid();
                 return false;
-        } else if(this.currentZ === 0 && this.myPerson.UDDirection == "DOWN") {
-                displayInvalid();
+        } else if(this.currentZ === 0 && this.myPerson.UDDirection == "D") {
+               // displayInvalid();
                 return false;
-        } else if(this.currentZ == this.mySize-1 && this.myPerson.UDDirection == "UP") {
+        } else if(this.currentZ == this.mySize-1 && this.myPerson.UDDirection == "U") {
                 displayInvalid();
                 return false;
         } else {
@@ -280,19 +345,37 @@ Game.prototype.attemptMove = function() {
 
 };
 
-Game.prototype.displayRoomInfo = function() {
-        //display room info based on this.rooms[this.currentX][this.currentY][this.currentZ].displayText;
+Game.prototype.shouldHaveDoor = function() {
+        if(this.currentX === this.endX && this.currentY === this.endY && this.currentZ === this.endZ && this.myPerson.NSEWDirection === this.endDir  && this.myPerson.UDDirection == "STRAIGHT") {
+                return true;
+        }
+        else if(this.currentX === 0 && this.myPerson.NSEWDirection == "W") {
+                return false;
+        } else if(this.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "E") {
+                return false;
+        } else if(this.currentY === 0 &&this.myPersonNSEWDirection == "S"){
+                return false;
+        } else if(this.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "N") {
+                return false;
+        } else if(this.currentZ === 0 && this.myPerson.UDDirection == "D") {
+                return false;
+        } else if(this.currentZ == this.mySize-1 && this.myPerson.UDDirection == "U") {
+                return false;
+        } else {
+                return true;
+        }
+
 };
 
 Game.prototype.enter = function() {
         if(this.myPerson.UDDirection != "STRAIGHT"){
                 switch(this.myPerson.UDDirection){
-                        case "UP":
+                        case "U":
                                 this.currentZ++;
                                 break;
                                 //execute based on trap here
 
-                        case "DOWN":
+                        case "D":
                                 this.currentZ--;
                                 break;
                                 //execute based on trap here
@@ -301,19 +384,19 @@ Game.prototype.enter = function() {
                                 //what the FUCK
                 } } else {
                 switch(this.myPerson.NSEWDirection){
-                        case "NORTH":
+                        case "N":
                                 this.currentY++;
                                 break;
                                 //execute based on trap here
-                        case "SOUTH":
+                        case "S":
                                 this.currentY--;
                                 break;
                                 //execute based on trap here
-                        case "EAST":
+                        case "E":
                                 this.currentX++;
                                 break;
                                 //execute based on trap here
-                        case "WEST":
+                        case "W":
                                 this.currentX--;
                                 break;
                                 //execute based on trap here
@@ -322,68 +405,58 @@ Game.prototype.enter = function() {
                                 //WTF
                 }
         }
-        this.displayRoomInfo();
-        switch(this.rooms[this.currentX][this.currentY][this.currentZ].trap){
-                case "FINALDOOR":
-                case "FIERYDEATH":
-                case "EBOLA":
-                case "SPIKEDEATH":
-            case "GASDEATH":
-        }
+   this.UDDirection = "STRAIGHT";
 
 };
 
-Game.prototype.interactWithRoom = function() {
-        if(this.rooms[this.currentX][this.currentY][this.currentZ].trap == "do somethign"){
-                //display based on trap
-        }
+function victoryEnd(){
+  
+  var card = new UI.Card({
+          title: 'You won'
+          });
+          card.body('You escaped the cube of Kanye');
+          //game.hide();
+        card.show();
+  
 }
-          
-            
             
 
 Person.prototype.turnRight = function () {
-        if(this.NSEWDirection == "NORTH") {
-                this.NSEWDirection = "EAST";
-        } else if(this.NSEWDirection == "EAST") {
-                this.NSEWDirection = "SOUTH";
-        } else if(this.NSEWDirection == "SOUTH") {
-                this.NSEWDirection = "WEST";
-        } else if(this.NSEWDirection  == "WEST") {
-                this.NSEWDirection = "NORTH";
+        if(this.NSEWDirection == "N") {
+                this.NSEWDirection = "E";
+        } else if(this.NSEWDirection == "E") {
+                this.NSEWDirection = "S";
+        } else if(this.NSEWDirection == "S") {
+                this.NSEWDirection = "W";
+        } else if(this.NSEWDirection  == "W") {
+                this.NSEWDirection = "N";
         }
 };
 
 Person.prototype.turnLeft = function () {
-        if(this.NSEWDirection == "NORTH") {
-                this.NSEWDirection = "WEST";
-        } else if(this.NSEWDirection == "WEST") {
-                this.NSEWDirection = "SOUTH";
-        } else if(this.NSEWDirection == "SOUTH") {
-                this.NSEWDirection = "EAST";
-        } else if(this.NSEWDirection  == "EAST") {
-                this.NSEWDirection = "NORTH";
+        if(this.NSEWDirection == "N") {
+                this.NSEWDirection = "W";
+        } else if(this.NSEWDirection == "W") {
+                this.NSEWDirection = "S";
+        } else if(this.NSEWDirection == "S") {
+                this.NSEWDirection = "E";
+        } else if(this.NSEWDirection  == "E") {
+                this.NSEWDirection = "N";
         }
 };
 
 Person.prototype.lookUP = function() {
         if(this.UDDirection == "STRAIGHT") {
-                this.UDDirection = "UP";
-        } else if (this.UDDirection == "DOWN") {
+                this.UDDirection = "U";
+        } else if (this.UDDirection == "D") {
                 this.UDDirection = "STRAIGHT";
         }
 };
 
 Person.prototype.lookDOWN = function() {
-        if(this.UDDirection == "UP") {
+        if(this.UDDirection == "U") {
                 this.UDDirection = "STRAIGHT";
         } else if (this.UDDirection == "STRAIGHT") {
-                this.UDDirection = "DOWN";
+                this.UDDirection = "D";
         }
-};
-
-Person.prototype.takeItem = function(item) {
-  
-  //TODO
-        //Items.push(item);
-} ;         
+};        
