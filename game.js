@@ -60,33 +60,54 @@ Game.prototype.enter = function() {
                 switch(this.myPerson.UDDirection){
                         case "UP":
                                 this.currentZ++;
+                                break;
                                 //execute based on trap here
 
                         case "DOWN":
                                 this.currentZ--;
+                                break;
                                 //execute based on trap here
                         default:        
+                                break;
                                 //what the FUCK
                 }
         } else {
                 switch(this.myPerson.NSEWDirection){
                         case "NORTH":
                                 this.currentY++;
+                                break;
                                 //execute based on trap here
                         case "SOUTH":
                                 this.currentY--;
+                                break;
                                 //execute based on trap here
                         case "EAST":
                                 this.currentX++;
+                                break;
                                 //execute based on trap here
                         case "WEST":
                                 this.currentX--;
+                                break;
                                 //execute based on trap here
-
                         default: 
+                                break;
                                 //WTF
                 }
         }
+        displayRoomInfo();
+        switch(this.rooms[this.currentX][this.currentY][this.currentZ].trap){
+                case "FINALDOOR":
+                        displ
+                case "FIERYDEATH":
+                case "EBOLA":
+                case "SPIKEDEATH":
+                case "GASDEATH"
+        }
+
+}
+
+Game.prototype.displayRoomInfo = function() {
+        //display room info based on this.rooms[this.currentX][this.currentY][this.currentZ].displayText;
 }
 
 Game.prototype.interactWithRoom = function() {
