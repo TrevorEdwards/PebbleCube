@@ -58,9 +58,12 @@ titleMenu.show();
 //BEGINNING OF NEW STUFF
 
 var titleToGame = function(e){
-  var game = roomRender(0,0);
+  var game = roomRender(0,true);
   game.show();
   titleMenu.hide();
+  game.on('click','up', function(){
+    game.openAnimate( roomRender(0,true) );
+  });
   //Initialize game
   //Render initial view
 };
@@ -70,18 +73,74 @@ titleMenu.on('click', 'down', titleToGame );
 titleMenu.on('click', 'select', titleToGame );
 titleMenu.on('click', 'back', titleToGame );
 
-var roomRender = function(tileType, viewEnum){
+/**
+* Returns a Window with the desired view rendered (0 = wall, 1 = floor, 2 = ceiling)
+*/
+function roomRender(view, hasDoor){
+  
   var wind = new UI.Window({
     fullscreen: true
   });
   
-  var myTile = new UI.Image({
+  //try to get rid of stupid animations, api doesnt support this well
+ // wind.on('show', function() {
+   // return false;
+//  });
+  
+  
+  var files = ['images/wall1.png','images/floor.png','images/ceiling.png'];
+  
+  var mypic = new UI.Image({
     position: new Vector2(0, 0),
     size: new Vector2(144, 168),
-    image: 'images/wall1.png'
+    image: files[view]
   });
   
-  wind.add(myTile);
+  wind.add(mypic);
+  
+  if( hasDoor ){
+  var door = new UI.Rect({
+    position: new Vector2(60,64),
+    size: new Vector2(26,26),
+    backgroundColor: 'black',
+    borderColor: 'white'
+  });
+  
+  var knob = new UI.Rect({
+    position: new Vector2(71,75),
+    size: new Vector2(5,5),
+    backgroundColor: 'white',
+    borderColor: 'clear'
+  });
+    
+    wind.add(door);
+    wind.add(knob);
+    
+   wind.openAnimate = function(nextRoom){
+     
+     //If any pebble devs read this, your queue function appears to be broken so I had to use setTimeout.
+   knob
+     .animate('size',  new Vector2(3, 3), 500)
+     .animate('position',  new Vector2(72, 76), 500);
+     
+     setTimeout(function() {
+       knob.animate('position',  new Vector2(79, 75), 500);
+      }, 600);
+     
+     setTimeout(function() {
+        knob.remove();
+        mypic.remove();
+        door.animate('position', new Vector2(0,0),1000)
+            .animate('size', new Vector2(144,168),1000);
+      }, 1200);
+     
+      setTimeout(function() {
+        nextRoom.show();
+             wind.hide();
+      }, 2400);
+    
+ };
+  }
   
   return wind;
   
