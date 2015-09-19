@@ -1,6 +1,6 @@
 /**
 * Pebble Cube V1.0
-* By Angela Yang, Trevor Edwards, and Gabe "Boozye" Ngam
+* By Trevor Edwards and Gabe "Boozye" Ngam
 */
 
 var UI = require('ui');
@@ -58,18 +58,35 @@ titleMenu.show();
 //BEGINNING OF NEW STUFF
 
 var titleToGame = function(e){
+  var G = new Game("lolname", null, 5, 3,3,3);
   var game = roomRender(0,true);
   game.show();
   titleMenu.hide();
-  game.on('click','up', function(){
-    game.openAnimate( );
-    game.on('click','up', function(){
-      game.transition( roomRender(0,true) );
-    });
-  });
-  //Initialize game
-  //Render initial view
+  
+  var doorClosed = true;
+  
+  function gameLoop(){
+  if( doorClosed ){
+      game.openAnimate( );
+      doorClosed = false;
+    } else {
+      if( G.attemptMove() ){
+        var hasDoor = true;
+        var roomType = 0;
+        var direction = "N";
+        doorClosed = true;
+        var temp = roomRender(roomType,hasDoor);
+        game.transition( temp );
+        game = temp;
+        game.on('click','up', gameLoop);
+      }
+    }
+  }
+  
+  game.on('click','up', gameLoop);
+  
 };
+
 
 titleMenu.on('click', 'up', titleToGame );
 titleMenu.on('click', 'down', titleToGame );
@@ -79,7 +96,7 @@ titleMenu.on('click', 'back', titleToGame );
 /**
 * Returns a Window with the desired view rendered (0 = wall, 1 = floor, 2 = ceiling)
 */
-function roomRender(view, hasDoor){
+function roomRender(view, hasDoor, direction){
   
   var wind = new UI.Window({
     fullscreen: true
@@ -100,6 +117,17 @@ function roomRender(view, hasDoor){
   });
   
   wind.add(mypic);
+  
+  var directionText = new UI.Text({
+  position: new Vector2(61,52),
+  size: new Vector2(30,30),
+  text: direction,
+  font: 'gothic-10',
+  color: 'white',
+  textAlign: 'center'
+  });
+  
+  wind.add(directionText);
   
   if( hasDoor ){
   var door = new UI.Rect({
@@ -175,41 +203,48 @@ function Person (name) {
         this.name = name;
         this.NSEWDirection = "NORTH";
         this.UDDirection = "STRAIGHT";
-
         this.Items = [];
 }
 
-function Game(name, room, size, startx, starty, startz) {
-        var gam;
-        this.myPerson = Person(name);
-        this.mySize = size;
-        this.rooms = room[size][size][size];
-        this.generateRooms(size);
-        this.currentX = 0;
-        this.currentY = 0;
-        this.currentZ = 0;
-        return gam;
-}
-
-Game.prototype.generateRooms = function(size, displayNames) {
-        var possibleNames = [];
-        getDisplaynames(possibleNames);
+var generateRooms = function(size) {
+    
+      var rooms = [];
+        for (var i = 0; i < size; i++ ){
+            rooms[i] = [];
+                for(var j = 0; j < size; j++) {
+                    rooms[i][j] = [];
+                }
+        }
+         var possibleNames = getDisplaynames();
         for(var x = 0; x < size; x++){
-        for(var y = 0; y < size; y++){
-        for(var z = 0; z < size; z++){
-                this.rooms[x][y][z] = room("dank", possibleNames[x*y*z % possibleNames.length()], x, y, z);
+          for(var y = 0; y < size; y++){
+            for(var z = 0; z < size; z++){
+                rooms[x][y][z] = new room("dank", possibleNames[x*y*z % possibleNames.length], x, y, z);
+            }
+          }
         }
-        }
-        }
+  return rooms;
 };
 
-function getDisplaynames(possibleNames) {
+
+function Game(name, room, size, startx, starty, startz) {
+        this.myPerson = new Person(name);
+        this.mySize = size;
+        this.rooms = generateRooms(size);
+        this.currentX = startx;
+        this.currentY = starty;
+        this.currentZ = startz;
+}
+
+function getDisplaynames() {
+    var possibleNames = [];
         possibleNames.push("This is the dankest meme Room");
         possibleNames.push("Congratulations, you win the room!");
         possibleNames.push("Wow, this room has the rarest pepe room");
         possibleNames.push("Trevor Edwards");
         possibleNames.push("Darude Sandstorm");
         possibleNames.push("duududududu");
+  return possibleNames;
 }
 
 //Used when you have an invalid funciton and you need to prompt a message to the player that 
@@ -220,20 +255,27 @@ var  displayInvalid = function() {
 
 
 Game.prototype.attemptMove = function() {
-        if(this.currentRoom.currentX === 0 && this.myPerson.NSEWDirection == "WEST") {
+        if(this.currentX === 0 && this.myPerson.NSEWDirection == "WEST") {
                 displayInvalid();
-        } else if(this.currentRoom.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "EAST") {
+                return false;
+        } else if(this.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "EAST") {
                 displayInvalid();
-        } else if(this.currentRoom.currentY === 0 &&this.myPersonNSEWDirection == "SOUTH"){
+                return false;
+        } else if(this.currentY === 0 &&this.myPersonNSEWDirection == "SOUTH"){
                 displayInvalid();
-        } else if(this.currentRoom.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "NORTH") {
+                return false;
+        } else if(this.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "NORTH") {
                 displayInvalid();
-        } else if(this.currentRoom.currentZ === 0 && this.myPerson.UDDirection == "DOWN") {
+                return false;
+        } else if(this.currentZ === 0 && this.myPerson.UDDirection == "DOWN") {
                 displayInvalid();
-        } else if(this.currentRoom.currentZ == this.mySize-1 && this.myPerson.UDDirection == "UP") {
+                return false;
+        } else if(this.currentZ == this.mySize-1 && this.myPerson.UDDirection == "UP") {
                 displayInvalid();
+                return false;
         } else {
-                this.interact();
+                this.enter();
+                return true;
         }
 
 };
