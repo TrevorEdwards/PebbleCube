@@ -409,7 +409,6 @@ Game.prototype.enter = function() {
                                 //execute based on trap here
                         default:        
                                 break;
-                                //what the FUCK
                 } } else {
                 switch(this.myPerson.NSEWDirection){
                         case "N":
@@ -430,7 +429,6 @@ Game.prototype.enter = function() {
                                 //execute based on trap here
                         default: 
                                 break;
-                                //WTF
                 }
         }
    this.UDDirection = "STRAIGHT";
