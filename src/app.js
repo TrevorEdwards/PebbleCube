@@ -1,6 +1,7 @@
 /**
 * Pebble Cube V1.0
-* By Trevor Edwards and Gabe "Boozye" Ngam
+* By Trevor "TBot" Edwards, Gabe "Boozye" Ngam, and Ricardo "Rikki Lee" Stephen
+* Special thanks to Angela Yang for trying.
 */
 
 var UI = require('ui');
@@ -13,19 +14,15 @@ var titleMenu = new UI.Window();
 
 Light.on();
 
-var placeData;
+var placeData; 
   ajax(
   {
     url:'http://cornelldata.org/api/v0/map-data/buildings',
-    // url:'http://api.openweathermap.org/data/2.5/forecast?q=London',
     type:'json'
   },
   function(data) {
-  //  console.log(data);
-  //  console.log(JSON.stringify(data, null, 2));
     placeData = [];
     for(var i = 0; i < data.length; i++){
-    //  console.log(data[i]);
       placeData.push(data[i].Name);
     }
   },
@@ -34,18 +31,14 @@ var placeData;
   }
 );
   
-
-// Create a background Rect
 var bgRect = new UI.Rect({
   position: new Vector2(10, 20),
   size: new Vector2(124, 60),
   backgroundColor: 'white'
 });
 
-// Add Rect to Window
 titleMenu.add(bgRect);
 
-// Create TimeText
 var timeText = new UI.Text({
   position: new Vector2(0, 50),
   size: new Vector2(144, 30),
@@ -148,7 +141,7 @@ var titleToGame = function(e){
       doorClosed = false;
       Vibe.vibrate('short');
     } else {
-      if( G.attemptMove() ){
+      if( G.attemptMove( game ) ){
         gameTransition(0);
         Vibe.vibrate('long');
       }
@@ -158,6 +151,8 @@ var titleToGame = function(e){
   game.on('click','select', gameLoop);
   game.on('click','up', function(){gameTransition(1);});
   game.on('click','down', function(){gameTransition(2);});
+  game.on('longClick','up', function(){gameTransition(3);});
+  game.on('longClick','down', function(){gameTransition(4);});
   
 };
 
@@ -232,6 +227,8 @@ function roomRender(view, hasDoor, direction){
    wind.openAnimate = function(nextRoom){
      
      //If any pebble devs read this, your queue function appears to be broken so I had to use setTimeout.
+     //The tutorial for it is also likely wrong, since I followed that
+     //#OpenSourceIt'sMyProblemNotYoursDon'tWorry
    knob
      .animate('size',  new Vector2(3, 3), 500)
      .animate('position',  new Vector2(72, 76), 500);
@@ -250,15 +247,17 @@ function roomRender(view, hasDoor, direction){
     wind.transition = function(nextRoom, card){
       
         knob.remove();
-        mypic.remove();
         door.animate('position', new Vector2(0,0),1000)
             .animate('size', new Vector2(144,168),1000);
      
       setTimeout(function() {
         nextRoom.show();
              wind.hide();
-         card.show();
       }, 1600);
+      
+      setTimeout(function() {
+          card.show();
+      }, 2200);
       
     };
   }
@@ -326,39 +325,46 @@ function Game(name, room, size, startx, starty, startz, endx,endy,endz,enddir) {
         this.endY = endy;
         this.endZ = endz;
         this.endDir = enddir;
-        this.ended = false;
 }
 
 
-Game.prototype.attemptMove = function() {
-        if(this.ended) {
-          return false;
-        }
-        else if(this.currentX === this.endX && this.currentY === this.endY && this.currentZ === this.endZ && this.myPerson.NSEWDirection === this.endDir  && this.myPerson.UDDirection == "STRAIGHT") {
-              victoryEnd();
-              this.ended = true;
-              var mypic = this.files[3];
-               this.wind.add(mypic);
-            this.wind.show(mypic);
+Game.prototype.attemptMove = function(gwindow) {
+        if(this.currentX === this.endX && this.currentY === this.endY && this.currentZ === this.endZ && this.myPerson.NSEWDirection === this.endDir  && this.myPerson.UDDirection == "STRAIGHT") {
+            var mypic = files[3];
+            var ww =  new UI.Window({
+              fullscreen: true
+             });
+            ww.add(mypic);
+          
+          var timeText = new UI.Text({
+  position: new Vector2(0, 135),
+  size: new Vector2(144, 30),
+  text: "You Win",
+  font: 'bitham-30-black',
+  color: 'white',
+  textAlign: 'center'
+});
+          ww.add(timeText);
+            ww.show();
+            gwindow.hide();
               return false;
         }
-        else if(this.currentX === 0 && this.myPerson.NSEWDirection == "W") {
+        else if(this.currentX === 0 && this.myPerson.NSEWDirection == "W" && this.myPerson.UDDirection == "STRAIGHT") {
                // displayInvalid();
                 return false;
-        } else if(this.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "E") {
+        } else if(this.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "E" && this.myPerson.UDDirection == "STRAIGHT") {
                // displayInvalid();
                 return false;
-        } else if(this.currentY === 0 &&this.myPersonNSEWDirection == "S"){
+        } else if(this.currentY === 0 &&this.myPersonNSEWDirection == "S" && this.myPerson.UDDirection == "STRAIGHT"){
                // displayInvalid();
                 return false;
-        } else if(this.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "N") {
+        } else if(this.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "N" && this.myPerson.UDDirection == "STRAIGHT") {
               //  displayInvalid();
                 return false;
-        } else if(this.currentZ === 0 && this.myPerson.UDDirection == "D") {
+        } else if(this.currentZ === 0 && this.myPerson.UDDirection == "D" && this.myPerson.UDDirection == "STRAIGHT") {
                // displayInvalid();
                 return false;
         } else if(this.currentZ == this.mySize-1 && this.myPerson.UDDirection == "U") {
-                displayInvalid();
                 return false;
         } else {
                 this.enter();
@@ -371,13 +377,13 @@ Game.prototype.shouldHaveDoor = function() {
         if(this.currentX === this.endX && this.currentY === this.endY && this.currentZ === this.endZ && this.myPerson.NSEWDirection === this.endDir  && this.myPerson.UDDirection == "STRAIGHT") {
                 return true;
         }
-        else if(this.currentX === 0 && this.myPerson.NSEWDirection == "W") {
+        else if(this.currentX === 0 && this.myPerson.NSEWDirection == "W" && this.myPerson.UDDirection == "STRAIGHT") {
                 return false;
-        } else if(this.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "E") {
+        } else if(this.currentX == this.mySize-1 && this.myPerson.NSEWDirection == "E" && this.myPerson.UDDirection == "STRAIGHT") {
                 return false;
-        } else if(this.currentY === 0 &&this.myPersonNSEWDirection == "S"){
+        } else if(this.currentY === 0 &&this.myPersonNSEWDirection == "S" && this.myPerson.UDDirection == "STRAIGHT"){
                 return false;
-        } else if(this.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "N") {
+        } else if(this.currentY == this.mySize-1 && this.myPerson.NSEWDirection == "N" && this.myPerson.UDDirection == "STRAIGHT") {
                 return false;
         } else if(this.currentZ === 0 && this.myPerson.UDDirection == "D") {
                 return false;
@@ -430,18 +436,6 @@ Game.prototype.enter = function() {
    this.UDDirection = "STRAIGHT";
 
 };
-
-function victoryEnd(){
-  
-  var card = new UI.Card({
-          title: 'You won'
-          });
-          card.body('You escaped the cube of Kanye');
-          //game.hide();
-        card.show();
-  
-  
-}
             
 
 Person.prototype.turnRight = function () {
